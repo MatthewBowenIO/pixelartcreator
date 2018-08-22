@@ -1,4 +1,9 @@
-import pygame, json, os
+import pygame, json, os, argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--ifile', help = 'Pixel art input', required = False)
+parser.add_argument('-o', '--ofile', help = 'Pixel art output', required = False)
+args = parser.parse_args()
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -14,6 +19,15 @@ for row in range(32):
     grid.append([])
     for column in range(100):
         grid[row].append(0)
+
+if args.ifile:
+    text = {}
+    with open(args.ifile) as ifile:
+        text = json.load(ifile).get("output")
+        ifile.close()
+        
+    for pixel in text:
+        grid[pixel[0]][pixel[1]] = 1
 
 pygame.init()
 
@@ -33,10 +47,14 @@ while not done:
             pos = pygame.mouse.get_pos()
             column = pos[0] // (WIDTH + MARGIN)
             row = pos[1] // (HEIGHT + MARGIN)
+            if column not in range(0,100) or row not in range(0,32):
+                continue
             grid[row][column] = 1
             print("Click ", pos, "Grid coordinates: ", row, column)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             pos = pygame.mouse.get_pos()
+            if column not in range(0,100) or row not in range(0,32):
+                continue
             column = pos[0] // (WIDTH + MARGIN)
             row = pos[1] // (HEIGHT + MARGIN)
             grid[row][column] = 0
@@ -64,7 +82,7 @@ for column in range(100):
         if grid[row][column] == 1:
             art['output'].append([row, column])
 
-with open('art.json', 'w') as ofile:
+with open(args.ofile or 'art.json', 'w') as ofile:
     json.dump(art, ofile)
     ofile.close()
 
